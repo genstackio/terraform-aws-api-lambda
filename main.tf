@@ -1,14 +1,14 @@
 module "api" {
   source     = "genstackio/apigateway2-api/aws"
-  version    = "0.1.0"
+  version    = "0.1.3"
   name       = "${var.env}-api-${var.name}"
   lambda_arn = var.lambda_arn
 }
 
 resource "aws_cloudfront_distribution" "cdn" {
   origin {
-    domain_name         = module.api.dns
-    origin_id           = "${var.env}-api-${var.name}"
+    domain_name = module.api.dns
+    origin_id   = "${var.env}-api-${var.name}"
     custom_origin_config {
       http_port              = "80"
       https_port             = "443"
@@ -17,9 +17,9 @@ resource "aws_cloudfront_distribution" "cdn" {
     }
   }
 
-  enabled             = true
-  is_ipv6_enabled     = true
-  comment             = "${var.env} api ${var.name} distribution"
+  enabled         = true
+  is_ipv6_enabled = true
+  comment         = "${var.env} api ${var.name} distribution"
 
   aliases = [var.dns]
 
@@ -57,8 +57,8 @@ resource "aws_cloudfront_distribution" "cdn" {
   }
 
   viewer_certificate {
-    acm_certificate_arn = aws_acm_certificate_validation.cert.certificate_arn
-    ssl_support_method  = "sni-only"
+    acm_certificate_arn      = aws_acm_certificate_validation.cert.certificate_arn
+    ssl_support_method       = "sni-only"
     minimum_protocol_version = "TLSv1"
   }
 }
