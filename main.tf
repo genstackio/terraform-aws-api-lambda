@@ -5,6 +5,11 @@ module "api" {
   lambda_arn = var.lambda_arn
 }
 
+resource "aws_cloudfront_origin_access_identity" "oai" {
+  count = length(var.static_assets) > 0 ? 1 : 0
+}
+
+
 resource "aws_cloudfront_distribution" "cdn" {
   origin {
     domain_name = module.api.dns
@@ -17,6 +22,16 @@ resource "aws_cloudfront_distribution" "cdn" {
     }
   }
 
+  dynamic "origin" {
+    for_each = toset(var.static_assets)
+    content {
+      domain_name = aws_s3_bucket.static_assets[origin.value.id].bucket_domain_name
+      origin_id   = origin.value.id
+      s3_origin_config {
+        origin_access_identity = aws_cloudfront_origin_access_identity.oai[0].cloudfront_access_identity_path
+      }
+    }
+  }
   enabled         = true
   is_ipv6_enabled = true
   comment         = "${var.env} api ${var.name} distribution"
@@ -30,7 +45,7 @@ resource "aws_cloudfront_distribution" "cdn" {
 
     forwarded_values {
       query_string = null == var.forward_query_string ? true : var.forward_query_string
-
+      headers      = var.forwarded_headers
       cookies {
         forward = "none"
       }
@@ -42,6 +57,28 @@ resource "aws_cloudfront_distribution" "cdn" {
     max_ttl                = 86400
     compress               = true
 
+    dynamic "lambda_function_association" {
+      for_each = toset(var.edge_lambdas)
+      content {
+        event_type   = lambda_function_association.value.event_type
+        lambda_arn   = lambda_function_association.value.lambda_arn
+        include_body = lambda_function_association.value.include_body
+      }
+    }
+  }
+
+  dynamic "ordered_cache_behavior" {
+    for_each = toset(var.static_assets)
+    content {
+      path_pattern             = ordered_cache_behavior.value.path_pattern
+      allowed_methods          = ["GET", "HEAD", "OPTIONS"]
+      cached_methods           = ["GET", "HEAD"]
+      target_origin_id         = ordered_cache_behavior.value.id
+      viewer_protocol_policy   = "redirect-to-https"
+      cache_policy_id          = data.aws_cloudfront_cache_policy.managed_caching_optimized.id
+      origin_request_policy_id = data.aws_cloudfront_origin_request_policy.managed_cors_s3_origin.id
+      compress                 = true
+    }
   }
 
   price_class = var.price_class
@@ -97,4 +134,24 @@ resource "aws_acm_certificate_validation" "cert" {
   provider                = aws.acm
   certificate_arn         = aws_acm_certificate.cert.arn
   validation_record_fqdns = [aws_route53_record.cert_validation.fqdn]
+}
+
+
+resource "aws_s3_bucket" "static_assets" {
+  for_each = {for s in toset(var.static_assets):s.id => s}
+  bucket   = lookup(each.value, "bucket_name")
+  acl      = "private"
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["POST", "GET", "PUT", "DELETE"]
+    allowed_origins = ["*"]
+    expose_headers  = ["ETag"]
+    max_age_seconds = 3000
+  }
+}
+
+resource "aws_s3_bucket_policy" "static_assets" {
+  for_each = {for s in toset(var.static_assets):s.id => s}
+  bucket   = aws_s3_bucket.static_assets[each.key].id
+  policy   = data.aws_iam_policy_document.s3_website_policy.json
 }

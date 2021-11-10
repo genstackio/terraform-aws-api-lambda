@@ -29,6 +29,10 @@ variable "forward_query_string" {
   type    = bool
   default = true
 }
+variable "forwarded_headers" {
+  type    = list(string)
+  default = null
+}
 variable "allowed_methods" {
   type    = list(string)
   default = ["GET", "POST", "DELETE", "PUT", "PATCH", "HEAD", "OPTIONS"]
@@ -36,4 +40,20 @@ variable "allowed_methods" {
 variable "cached_methods" {
   type    = list(string)
   default = ["GET", "HEAD"]
+}
+variable "edge_lambdas" {
+  type = list(object({
+    event_type = string
+    lambda_arn = string
+    include_body = bool
+  }))
+  default = []
+}
+variable "static_assets" {
+  type = list(object({
+    path_pattern = string
+    id           = string
+    bucket_name  = string
+  }))
+  default = []
 }
