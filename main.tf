@@ -23,7 +23,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   }
 
   dynamic "origin" {
-    for_each = toset(var.static_assets)
+    for_each = {for s in toset(var.static_assets):s.id => s}
     content {
       domain_name = aws_s3_bucket.static_assets[origin.value.id].bucket_domain_name
       origin_id   = origin.value.id
@@ -58,7 +58,7 @@ resource "aws_cloudfront_distribution" "cdn" {
     compress               = true
 
     dynamic "lambda_function_association" {
-      for_each = toset(var.edge_lambdas)
+      for_each = {for i,l in var.edge_lambdas: "lambda-${i}" => l}
       content {
         event_type   = lambda_function_association.value.event_type
         lambda_arn   = lambda_function_association.value.lambda_arn
@@ -68,7 +68,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   }
 
   dynamic "ordered_cache_behavior" {
-    for_each = toset(var.static_assets)
+    for_each = {for s in toset(var.static_assets):s.id => s}
     content {
       path_pattern             = ordered_cache_behavior.value.path_pattern
       allowed_methods          = ["GET", "HEAD", "OPTIONS"]
