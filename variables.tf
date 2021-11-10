@@ -4,6 +4,10 @@ variable "name" {
 variable "env" {
   type = string
 }
+variable "api_name" {
+  type    = string
+  default = null
+}
 variable "lambda_arn" {
   type = string
 }

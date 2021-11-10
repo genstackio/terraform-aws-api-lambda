@@ -1,14 +1,14 @@
 module "api" {
   source     = "genstackio/apigateway2-api/aws"
   version    = "0.1.3"
-  name       = "${var.env}-api-${var.name}"
+  name       = (null == var.api_name) ? "${var.env}-api-${var.name}" : var.api_name
   lambda_arn = var.lambda_arn
 }
 
 resource "aws_cloudfront_distribution" "cdn" {
   origin {
     domain_name = module.api.dns
-    origin_id   = "${var.env}-api-${var.name}"
+    origin_id   = (null == var.api_name) ? "${var.env}-api-${var.name}" : var.api_name
     custom_origin_config {
       http_port              = "80"
       https_port             = "443"
@@ -26,7 +26,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   default_cache_behavior {
     allowed_methods  = var.allowed_methods
     cached_methods   = var.cached_methods
-    target_origin_id = "${var.env}-api-${var.name}"
+    target_origin_id = (null == var.api_name) ? "${var.env}-api-${var.name}" : var.api_name
 
     forwarded_values {
       query_string = null == var.forward_query_string ? true : var.forward_query_string
