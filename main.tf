@@ -153,5 +153,5 @@ resource "aws_s3_bucket" "static_assets" {
 resource "aws_s3_bucket_policy" "static_assets" {
   for_each = {for s in toset(var.static_assets):s.id => s}
   bucket   = aws_s3_bucket.static_assets[each.key].id
-  policy   = data.aws_iam_policy_document.s3_website_policy.json
+  policy   = data.aws_iam_policy_document.s3_website_policy[each.key].json
 }
