@@ -15,7 +15,7 @@ data "aws_iam_policy_document" "s3_website_policy" {
     resources = ["${aws_s3_bucket.static_assets[each.key].arn}/*"]
     principals {
       type        = "AWS"
-      identifiers = [aws_cloudfront_origin_access_identity.oai.iam_arn]
+      identifiers = [aws_cloudfront_origin_access_identity.oai[0].iam_arn]
     }
   }
   statement {
@@ -23,7 +23,7 @@ data "aws_iam_policy_document" "s3_website_policy" {
     resources = [aws_s3_bucket.static_assets[each.key].arn]
     principals {
       type        = "AWS"
-      identifiers = [aws_cloudfront_origin_access_identity.oai.iam_arn]
+      identifiers = [aws_cloudfront_origin_access_identity.oai[0].iam_arn]
     }
   }
 }
