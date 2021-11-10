@@ -9,7 +9,7 @@ data "aws_cloudfront_cache_policy" "managed_caching_optimized" {
 }
 
 data "aws_iam_policy_document" "s3_website_policy" {
-  for_each = {for s in toset(var.static_assets):s.id => s}
+  for_each = {for s in toset(var.static_assets):s.id => s if null == s.bucket_id}
   statement {
     actions   = ["s3:GetObject"]
     resources = ["${aws_s3_bucket.static_assets[each.key].arn}/*"]

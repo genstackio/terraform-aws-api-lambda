@@ -25,7 +25,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   dynamic "origin" {
     for_each = {for s in toset(var.static_assets):s.id => s}
     content {
-      domain_name = aws_s3_bucket.static_assets[origin.value.id].bucket_regional_domain_name
+      domain_name = aws_s3_bucket.static_assets[(null != origin.value.bucket_id) ? origin.value.bucket_id : origin.value.id].bucket_regional_domain_name
       origin_id   = origin.value.id
       s3_origin_config {
         origin_access_identity = aws_cloudfront_origin_access_identity.oai[0].cloudfront_access_identity_path
@@ -73,7 +73,7 @@ resource "aws_cloudfront_distribution" "cdn" {
       path_pattern             = ordered_cache_behavior.value.path_pattern
       allowed_methods          = ["GET", "HEAD", "OPTIONS"]
       cached_methods           = ["GET", "HEAD"]
-      target_origin_id         = ordered_cache_behavior.value.id
+      target_origin_id         = (null != ordered_cache_behavior.value.bucket_id) ? ordered_cache_behavior.value.bucket_id : ordered_cache_behavior.value.id
       viewer_protocol_policy   = "redirect-to-https"
       cache_policy_id          = data.aws_cloudfront_cache_policy.managed_caching_optimized.id
       origin_request_policy_id = data.aws_cloudfront_origin_request_policy.managed_cors_s3_origin.id
@@ -138,7 +138,7 @@ resource "aws_acm_certificate_validation" "cert" {
 
 
 resource "aws_s3_bucket" "static_assets" {
-  for_each = {for s in toset(var.static_assets):s.id => s}
+  for_each = {for s in toset(var.static_assets):s.id => s if null == s.bucket_id}
   bucket   = lookup(each.value, "bucket_name")
   acl      = "private"
   cors_rule {
@@ -151,7 +151,7 @@ resource "aws_s3_bucket" "static_assets" {
 }
 
 resource "aws_s3_bucket_policy" "static_assets" {
-  for_each = {for s in toset(var.static_assets):s.id => s}
+  for_each = {for s in toset(var.static_assets):s.id => s if null == s.bucket_id}
   bucket   = aws_s3_bucket.static_assets[each.key].id
   policy   = data.aws_iam_policy_document.s3_website_policy[each.key].json
 }
