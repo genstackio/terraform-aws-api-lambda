@@ -25,7 +25,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   dynamic "origin" {
     for_each = {for s in toset(var.static_assets):s.id => s}
     content {
-      domain_name = aws_s3_bucket.static_assets[origin.value.id].bucket_domain_name
+      domain_name = aws_s3_bucket.static_assets[origin.value.id].bucket_regional_domain_name
       origin_id   = origin.value.id
       s3_origin_config {
         origin_access_identity = aws_cloudfront_origin_access_identity.oai[0].cloudfront_access_identity_path
