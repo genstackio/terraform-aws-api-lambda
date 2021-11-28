@@ -26,7 +26,7 @@ resource "aws_cloudfront_distribution" "cdn" {
     for_each = (null != var.accesslogs_s3_bucket) ? {a: true} : {}
     content {
       bucket = var.accesslogs_s3_bucket
-      prefix = module.api.dns
+      prefix = "${module.api.dns}/"
     }
   }
 
