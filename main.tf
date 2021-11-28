@@ -22,6 +22,14 @@ resource "aws_cloudfront_distribution" "cdn" {
     }
   }
 
+  dynamic "logging_config" {
+    for_each = (null != var.accesslogs_s3_bucket) ? {a: true} : {}
+    content {
+      bucket = var.accesslogs_s3_bucket
+      prefix = module.api.dns
+    }
+  }
+
   dynamic "origin" {
     for_each = {for s in toset(var.static_assets):s.id => s}
     content {

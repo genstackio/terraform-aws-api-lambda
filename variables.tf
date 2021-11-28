@@ -58,3 +58,7 @@ variable "static_assets" {
   }))
   default = []
 }
+variable "accesslogs_s3_bucket" {
+  type    = string
+  default = null
+}
