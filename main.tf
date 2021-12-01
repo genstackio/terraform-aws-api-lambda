@@ -73,6 +73,14 @@ resource "aws_cloudfront_distribution" "cdn" {
         include_body = lambda_function_association.value.include_body
       }
     }
+
+    dynamic "function_association" {
+      for_each = {for i,l in var.functions: "function-${i}" => l}
+      content {
+        event_type   = function_association.value.event_type
+        function_arn = function_association.value.function_arn
+      }
+    }
   }
 
   dynamic "ordered_cache_behavior" {
@@ -86,6 +94,23 @@ resource "aws_cloudfront_distribution" "cdn" {
       cache_policy_id          = data.aws_cloudfront_cache_policy.managed_caching_optimized.id
       origin_request_policy_id = data.aws_cloudfront_origin_request_policy.managed_cors_s3_origin.id
       compress                 = true
+
+      dynamic "lambda_function_association" {
+        for_each = {for i,l in var.static_assets_edge_lambdas: "static-assets-lambda-${i}" => l}
+        content {
+          event_type   = lambda_function_association.value.event_type
+          lambda_arn   = lambda_function_association.value.lambda_arn
+          include_body = lambda_function_association.value.include_body
+        }
+      }
+
+      dynamic "function_association" {
+        for_each = {for i,l in var.static_assets_functions: "static-assets-function-${i}" => l}
+        content {
+          event_type   = function_association.value.event_type
+          function_arn = function_association.value.function_arn
+        }
+      }
     }
   }
 

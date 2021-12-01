@@ -49,6 +49,28 @@ variable "edge_lambdas" {
   }))
   default = []
 }
+variable "static_assets_edge_lambdas" {
+  type = list(object({
+    event_type = string
+    lambda_arn = string
+    include_body = bool
+  }))
+  default = []
+}
+variable "functions" {
+  type = list(object({
+    event_type = string
+    function_arn = string
+  }))
+  default = []
+}
+variable "static_assets_functions" {
+  type = list(object({
+    event_type = string
+    function_arn = string
+  }))
+  default = []
+}
 variable "static_assets" {
   type = list(object({
     path_pattern = string
