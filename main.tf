@@ -14,6 +14,15 @@ resource "aws_cloudfront_distribution" "cdn" {
   origin {
     domain_name = module.api.dns
     origin_id   = (null == var.api_name) ? "${var.env}-api-${var.name}" : var.api_name
+
+    dynamic custom_header {
+      for_each = var.edge_lambdas_variables
+      content {
+        name  = "x-lambda-var-${replace(lower(custom_header.key), "_", "-")}"
+        value = custom_header.value
+      }
+    }
+
     custom_origin_config {
       http_port              = "80"
       https_port             = "443"
