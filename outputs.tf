@@ -10,3 +10,6 @@ output "static_assets_buckets" {
     arn  = b.arn
   }}
 }
+output "cloudfront_id" {
+  value = aws_cloudfront_distribution.cdn.id
+}
