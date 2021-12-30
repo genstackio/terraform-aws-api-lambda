@@ -1,6 +1,6 @@
 module "api" {
   source     = "genstackio/apigateway2-api/aws"
-  version    = "0.1.3"
+  version    = "0.1.4"
   name       = (null == var.api_name) ? "${var.env}-api-${var.name}" : var.api_name
   lambda_arn = var.lambda_arn
 }
