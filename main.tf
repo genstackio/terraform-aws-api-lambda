@@ -69,10 +69,10 @@ resource "aws_cloudfront_distribution" "cdn" {
     }
 
     viewer_protocol_policy = "redirect-to-https"
-    min_ttl                = 0
-    default_ttl            = 0
-    max_ttl                = 86400
-    compress               = true
+    min_ttl                = var.min_ttl
+    default_ttl            = var.default_ttl
+    max_ttl                = var.max_ttl
+    compress               = var.compress
 
     dynamic "lambda_function_association" {
       for_each = {for i,l in var.edge_lambdas: "lambda-${i}" => l}

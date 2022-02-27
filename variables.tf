@@ -88,3 +88,19 @@ variable "accesslogs_s3_bucket" {
   type    = string
   default = null
 }
+variable "min_ttl" {
+  type    = number
+  default = 0
+}
+variable "max_ttl" {
+  type    = number
+  default = 86400
+}
+variable "default_ttl" {
+  type    = number
+  default = 0
+}
+variable "compress" {
+  type    = bool
+  default = true
+}
