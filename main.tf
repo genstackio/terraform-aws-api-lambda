@@ -178,11 +178,21 @@ resource "aws_acm_certificate_validation" "cert" {
   validation_record_fqdns = [aws_route53_record.cert_validation.fqdn]
 }
 
-
 resource "aws_s3_bucket" "static_assets" {
   for_each = {for s in toset(var.static_assets):s.id => s if null == s.bucket_id}
   bucket   = lookup(each.value, "bucket_name")
-  acl      = "private"
+}
+
+resource "aws_s3_bucket_acl" "static_assets" {
+  for_each = {for s in toset(var.static_assets):s.id => s if null == s.bucket_id}
+  bucket   = aws_s3_bucket.static_assets[each.key].id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_cors_configuration" "static_assets" {
+  for_each = {for s in toset(var.static_assets):s.id => s if null == s.bucket_id}
+  bucket   = aws_s3_bucket.static_assets[each.key].bucket
+
   cors_rule {
     allowed_headers = ["*"]
     allowed_methods = ["POST", "GET", "PUT", "DELETE"]
