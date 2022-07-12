@@ -60,14 +60,6 @@ resource "aws_cloudfront_distribution" "cdn" {
     cached_methods   = var.cached_methods
     target_origin_id = (null == var.api_name) ? "${var.env}-api-${var.name}" : var.api_name
 
-    forwarded_values {
-      query_string = null == var.forward_query_string ? true : var.forward_query_string
-      headers      = var.forwarded_headers
-      cookies {
-        forward = "none"
-      }
-    }
-
     viewer_protocol_policy = "redirect-to-https"
     min_ttl                = var.min_ttl
     default_ttl            = var.default_ttl
