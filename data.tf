@@ -2,10 +2,17 @@
 data "aws_cloudfront_origin_request_policy" "managed_cors_s3_origin" {
   name = "Managed-CORS-S3Origin"
 }
+data "aws_cloudfront_origin_request_policy" "managed_cors_custom_origin" {
+  name = "Managed-CORS-CustomOrigin"
+}
 
 # Managed cache policy
 data "aws_cloudfront_cache_policy" "managed_caching_optimized" {
   name = "Managed-CachingOptimized"
+}
+# Managed response headers policy
+data "aws_cloudfront_response_headers_policy" "managed_cors_with_preflight_and_securityheaders" {
+  name = "Managed-CORS-with-preflight-and-SecurityHeadersPolicy"
 }
 
 data "aws_iam_policy_document" "s3_website_policy" {

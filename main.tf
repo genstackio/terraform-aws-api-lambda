@@ -74,6 +74,10 @@ resource "aws_cloudfront_distribution" "cdn" {
     max_ttl                = var.max_ttl
     compress               = var.compress
 
+    cache_policy_id          = aws_cloudfront_cache_policy.cache.id
+    origin_request_policy_id = data.aws_cloudfront_origin_request_policy.managed_cors_custom_origin.id
+    response_headers_policy_id = data.aws_cloudfront_response_headers_policy.managed_cors_with_preflight_and_securityheaders.id
+
     dynamic "lambda_function_association" {
       for_each = {for i,l in var.edge_lambdas: "lambda-${i}" => l}
       content {
@@ -102,6 +106,7 @@ resource "aws_cloudfront_distribution" "cdn" {
       viewer_protocol_policy   = "redirect-to-https"
       cache_policy_id          = data.aws_cloudfront_cache_policy.managed_caching_optimized.id
       origin_request_policy_id = data.aws_cloudfront_origin_request_policy.managed_cors_s3_origin.id
+      response_headers_policy_id = data.aws_cloudfront_response_headers_policy.managed_cors_with_preflight_and_securityheaders.id
       compress                 = true
 
       dynamic "lambda_function_association" {
@@ -206,4 +211,32 @@ resource "aws_s3_bucket_policy" "static_assets" {
   for_each = {for s in toset(var.static_assets):s.id => s if null == s.bucket_id}
   bucket   = aws_s3_bucket.static_assets[each.key].id
   policy   = data.aws_iam_policy_document.s3_website_policy[each.key].json
+}
+
+
+
+resource "aws_cloudfront_cache_policy" "cache" {
+  name        = "${var.name}-cache-policy"
+
+  min_ttl                = var.min_ttl
+  default_ttl            = var.default_ttl
+  max_ttl                = var.max_ttl
+
+  parameters_in_cache_key_and_forwarded_to_origin {
+    enable_accept_encoding_brotli = var.compress
+    enable_accept_encoding_gzip   = var.compress
+
+    cookies_config {
+      cookie_behavior = "none"
+    }
+    headers_config {
+      header_behavior = length(null == var.forwarded_headers ? [] : var.forwarded_headers) > 0 ? "whitelist" : "none"
+      headers {
+        items = null == var.forwarded_headers ? [] : var.forwarded_headers
+      }
+    }
+    query_strings_config {
+      query_string_behavior = (null == var.forward_query_string ? true : var.forward_query_string) ? "all" : "none"
+    }
+  }
 }
