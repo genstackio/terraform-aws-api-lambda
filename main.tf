@@ -56,19 +56,14 @@ resource "aws_cloudfront_distribution" "cdn" {
   aliases = [var.dns]
 
   default_cache_behavior {
-    allowed_methods  = var.allowed_methods
-    cached_methods   = var.cached_methods
-    target_origin_id = (null == var.api_name) ? "${var.env}-api-${var.name}" : var.api_name
-
-    viewer_protocol_policy = "redirect-to-https"
-    min_ttl                = var.min_ttl
-    default_ttl            = var.default_ttl
-    max_ttl                = var.max_ttl
-    compress               = var.compress
-
-    cache_policy_id          = aws_cloudfront_cache_policy.cache.id
-    origin_request_policy_id = data.aws_cloudfront_origin_request_policy.managed_cors_custom_origin.id
+    allowed_methods            = var.allowed_methods
+    cached_methods             = var.cached_methods
+    target_origin_id           = (null == var.api_name) ? "${var.env}-api-${var.name}" : var.api_name
+    viewer_protocol_policy     = "redirect-to-https"
+    cache_policy_id            = aws_cloudfront_cache_policy.cache.id
+    origin_request_policy_id   = data.aws_cloudfront_origin_request_policy.managed_cors_custom_origin.id
     response_headers_policy_id = data.aws_cloudfront_response_headers_policy.managed_cors_with_preflight_and_securityheaders.id
+    compress                   = var.compress
 
     dynamic "lambda_function_association" {
       for_each = {for i,l in var.edge_lambdas: "lambda-${i}" => l}
@@ -99,8 +94,7 @@ resource "aws_cloudfront_distribution" "cdn" {
       cache_policy_id          = data.aws_cloudfront_cache_policy.managed_caching_optimized.id
       origin_request_policy_id = data.aws_cloudfront_origin_request_policy.managed_cors_s3_origin.id
       response_headers_policy_id = data.aws_cloudfront_response_headers_policy.managed_cors_with_preflight_and_securityheaders.id
-      compress                 = true
-
+      compress = true
       dynamic "lambda_function_association" {
         for_each = {for i,l in var.static_assets_edge_lambdas: "static-assets-lambda-${i}" => l}
         content {
@@ -223,8 +217,11 @@ resource "aws_cloudfront_cache_policy" "cache" {
     }
     headers_config {
       header_behavior = length(null == var.forwarded_headers ? [] : var.forwarded_headers) > 0 ? "whitelist" : "none"
-      headers {
-        items = null == var.forwarded_headers ? [] : var.forwarded_headers
+      dynamic "headers" {
+        for_each = length(null == var.forwarded_headers ? [] : var.forwarded_headers) > 0 ? {x: true} : {}
+        content {
+          items = null == var.forwarded_headers ? [] : var.forwarded_headers
+        }
       }
     }
     query_strings_config {
