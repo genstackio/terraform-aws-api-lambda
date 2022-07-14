@@ -29,6 +29,10 @@ variable "forward_query_string" {
   type    = bool
   default = true
 }
+variable "forward_cookies" {
+  type    = bool
+  default = false
+}
 variable "forwarded_headers" {
   type    = list(string)
   default = null

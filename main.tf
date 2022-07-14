@@ -213,7 +213,7 @@ resource "aws_cloudfront_cache_policy" "cache" {
     enable_accept_encoding_gzip   = var.compress
 
     cookies_config {
-      cookie_behavior = "none"
+      cookie_behavior = var.forward_cookies ? "all" : "none"
     }
     headers_config {
       header_behavior = length(null == var.forwarded_headers ? [] : var.forwarded_headers) > 0 ? "whitelist" : "none"
