@@ -202,7 +202,7 @@ resource "aws_s3_bucket_policy" "static_assets" {
 
 
 resource "aws_cloudfront_cache_policy" "cache" {
-  name        = "${var.name}-cache-policy"
+  name        = "${var.env}-${var.name}-cache-policy"
 
   min_ttl                = var.min_ttl
   default_ttl            = var.default_ttl
