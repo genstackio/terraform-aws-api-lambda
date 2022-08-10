@@ -267,7 +267,7 @@ resource "aws_cloudfront_response_headers_policy" "custom_cors_with_preflight_an
     xss_protection {
       mode_block = true
       override = false
-      protected = true
+      protection = true
     }
   }
 
