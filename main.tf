@@ -236,10 +236,6 @@ resource "aws_cloudfront_response_headers_policy" "custom_cors_with_preflight_an
   cors_config {
     access_control_allow_credentials = false
 
-    access_control_allow_headers {
-      items = []
-    }
-
     access_control_allow_methods {
       items = ["GET", "HEAD", "PUT", "POST", "PATCH", "DELETE", "OPTIONS"]
     }
