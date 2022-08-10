@@ -62,7 +62,7 @@ resource "aws_cloudfront_distribution" "cdn" {
     viewer_protocol_policy     = "redirect-to-https"
     cache_policy_id            = aws_cloudfront_cache_policy.cache.id
     origin_request_policy_id   = data.aws_cloudfront_origin_request_policy.managed_cors_custom_origin.id
-    response_headers_policy_id = data.aws_cloudfront_response_headers_policy.managed_cors_with_preflight_and_securityheaders.id
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.custom_cors_with_preflight_and_securityheaders.id
     compress                   = var.compress
 
     dynamic "lambda_function_association" {
@@ -93,7 +93,7 @@ resource "aws_cloudfront_distribution" "cdn" {
       viewer_protocol_policy   = "redirect-to-https"
       cache_policy_id          = data.aws_cloudfront_cache_policy.managed_caching_optimized.id
       origin_request_policy_id = data.aws_cloudfront_origin_request_policy.managed_cors_s3_origin.id
-      response_headers_policy_id = data.aws_cloudfront_response_headers_policy.managed_cors_with_preflight_and_securityheaders.id
+      response_headers_policy_id = aws_cloudfront_response_headers_policy.custom_cors_with_preflight_and_securityheaders.id
       compress = true
       dynamic "lambda_function_association" {
         for_each = {for i,l in var.static_assets_edge_lambdas: "static-assets-lambda-${i}" => l}
@@ -228,4 +228,47 @@ resource "aws_cloudfront_cache_policy" "cache" {
       query_string_behavior = (null == var.forward_query_string ? true : var.forward_query_string) ? "all" : "none"
     }
   }
+}
+
+resource "aws_cloudfront_response_headers_policy" "custom_cors_with_preflight_and_securityheaders" {
+  name    = "${var.env}-Custom-CORS-with-preflight-and-SecurityHeadersPolicy"
+
+  cors_config {
+    access_control_allow_credentials = false
+
+    access_control_allow_headers {
+      items = []
+    }
+
+    access_control_allow_methods {
+      items = ["GET", "HEAD", "PUT", "POST", "PATCH", "DELETE", "OPTIONS"]
+    }
+
+    access_control_allow_origins {
+      items = ["*"]
+    }
+
+    access_control_expose_headers {
+      items = ["*"]
+    }
+
+    origin_override = false
+  }
+
+  security_headers_config {
+    referrer_policy {
+      referrer_policy = "strict-origin-when-cross-origi"
+      override = false
+    }
+    strict_transport_security {
+      access_control_max_age_sec = 31536000
+      override = false
+    }
+    xss_protection {
+      mode_block = true
+      override = false
+      protected = true
+    }
+  }
+
 }
