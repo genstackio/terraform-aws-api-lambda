@@ -257,7 +257,7 @@ resource "aws_cloudfront_response_headers_policy" "custom_cors_with_preflight_an
 
   security_headers_config {
     referrer_policy {
-      referrer_policy = "strict-origin-when-cross-origi"
+      referrer_policy = "strict-origin-when-cross-origin"
       override = false
     }
     strict_transport_security {
