@@ -15,7 +15,7 @@ resource "aws_cloudfront_distribution" "cdn" {
     domain_name = module.api.dns
     origin_id   = (null == var.api_name) ? "${var.env}-api-${var.name}" : var.api_name
 
-    dynamic custom_header {
+    dynamic "custom_header" {
       for_each = var.edge_lambdas_variables
       content {
         name  = "x-lambda-var-${replace(lower(custom_header.key), "_", "-")}"
@@ -32,7 +32,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   }
 
   dynamic "logging_config" {
-    for_each = (null != var.accesslogs_s3_bucket) ? {a: true} : {}
+    for_each = (null != var.accesslogs_s3_bucket) ? { a : true } : {}
     content {
       bucket = var.accesslogs_s3_bucket
       prefix = "${var.dns}/"
@@ -40,7 +40,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   }
 
   dynamic "origin" {
-    for_each = {for s in toset(var.static_assets):s.id => s}
+    for_each = { for s in toset(var.static_assets) : s.id => s }
     content {
       domain_name = aws_s3_bucket.static_assets[(null != origin.value.bucket_id) ? origin.value.bucket_id : origin.value.id].bucket_regional_domain_name
       origin_id   = origin.value.id
@@ -66,7 +66,7 @@ resource "aws_cloudfront_distribution" "cdn" {
     compress                   = var.compress
 
     dynamic "lambda_function_association" {
-      for_each = {for i,l in var.edge_lambdas: "lambda-${i}" => l}
+      for_each = { for i, l in var.edge_lambdas : "lambda-${i}" => l }
       content {
         event_type   = lambda_function_association.value.event_type
         lambda_arn   = lambda_function_association.value.lambda_arn
@@ -75,7 +75,7 @@ resource "aws_cloudfront_distribution" "cdn" {
     }
 
     dynamic "function_association" {
-      for_each = {for i,l in var.functions: "function-${i}" => l}
+      for_each = { for i, l in var.functions : "function-${i}" => l }
       content {
         event_type   = function_association.value.event_type
         function_arn = function_association.value.function_arn
@@ -84,19 +84,19 @@ resource "aws_cloudfront_distribution" "cdn" {
   }
 
   dynamic "ordered_cache_behavior" {
-    for_each = {for s in toset(var.static_assets):s.id => s}
+    for_each = { for s in toset(var.static_assets) : s.id => s }
     content {
-      path_pattern             = ordered_cache_behavior.value.path_pattern
-      allowed_methods          = ["GET", "HEAD", "OPTIONS"]
-      cached_methods           = ["GET", "HEAD"]
-      target_origin_id         = (null != ordered_cache_behavior.value.bucket_id) ? ordered_cache_behavior.value.bucket_id : ordered_cache_behavior.value.id
-      viewer_protocol_policy   = "redirect-to-https"
-      cache_policy_id          = data.aws_cloudfront_cache_policy.managed_caching_optimized.id
-      origin_request_policy_id = data.aws_cloudfront_origin_request_policy.managed_cors_s3_origin.id
+      path_pattern               = ordered_cache_behavior.value.path_pattern
+      allowed_methods            = ["GET", "HEAD", "OPTIONS"]
+      cached_methods             = ["GET", "HEAD"]
+      target_origin_id           = (null != ordered_cache_behavior.value.bucket_id) ? ordered_cache_behavior.value.bucket_id : ordered_cache_behavior.value.id
+      viewer_protocol_policy     = "redirect-to-https"
+      cache_policy_id            = data.aws_cloudfront_cache_policy.managed_caching_optimized.id
+      origin_request_policy_id   = data.aws_cloudfront_origin_request_policy.managed_cors_s3_origin.id
       response_headers_policy_id = aws_cloudfront_response_headers_policy.custom_cors_with_preflight_and_securityheaders.id
-      compress = true
+      compress                   = true
       dynamic "lambda_function_association" {
-        for_each = {for i,l in var.static_assets_edge_lambdas: "static-assets-lambda-${i}" => l}
+        for_each = { for i, l in var.static_assets_edge_lambdas : "static-assets-lambda-${i}" => l }
         content {
           event_type   = lambda_function_association.value.event_type
           lambda_arn   = lambda_function_association.value.lambda_arn
@@ -105,7 +105,7 @@ resource "aws_cloudfront_distribution" "cdn" {
       }
 
       dynamic "function_association" {
-        for_each = {for i,l in var.static_assets_functions: "static-assets-function-${i}" => l}
+        for_each = { for i, l in var.static_assets_functions : "static-assets-function-${i}" => l }
         content {
           event_type   = function_association.value.event_type
           function_arn = function_association.value.function_arn
@@ -170,18 +170,18 @@ resource "aws_acm_certificate_validation" "cert" {
 }
 
 resource "aws_s3_bucket" "static_assets" {
-  for_each = {for s in toset(var.static_assets):s.id => s if null == s.bucket_id}
+  for_each = { for s in toset(var.static_assets) : s.id => s if null == s.bucket_id }
   bucket   = lookup(each.value, "bucket_name")
 }
 
 resource "aws_s3_bucket_acl" "static_assets" {
-  for_each = {for s in toset(var.static_assets):s.id => s if null == s.bucket_id}
+  for_each = { for s in toset(var.static_assets) : s.id => s if null == s.bucket_id }
   bucket   = aws_s3_bucket.static_assets[each.key].id
-  acl    = "private"
+  acl      = "private"
 }
 
 resource "aws_s3_bucket_cors_configuration" "static_assets" {
-  for_each = {for s in toset(var.static_assets):s.id => s if null == s.bucket_id}
+  for_each = { for s in toset(var.static_assets) : s.id => s if null == s.bucket_id }
   bucket   = aws_s3_bucket.static_assets[each.key].bucket
 
   cors_rule {
@@ -194,7 +194,7 @@ resource "aws_s3_bucket_cors_configuration" "static_assets" {
 }
 
 resource "aws_s3_bucket_policy" "static_assets" {
-  for_each = {for s in toset(var.static_assets):s.id => s if null == s.bucket_id}
+  for_each = { for s in toset(var.static_assets) : s.id => s if null == s.bucket_id }
   bucket   = aws_s3_bucket.static_assets[each.key].id
   policy   = data.aws_iam_policy_document.s3_website_policy[each.key].json
 }
@@ -202,11 +202,11 @@ resource "aws_s3_bucket_policy" "static_assets" {
 
 
 resource "aws_cloudfront_cache_policy" "cache" {
-  name        = "${var.env}-${var.name}-cache-policy"
+  name = "${var.env}-${var.name}-cache-policy"
 
-  min_ttl                = var.min_ttl
-  default_ttl            = var.default_ttl
-  max_ttl                = var.max_ttl
+  min_ttl     = var.min_ttl
+  default_ttl = var.default_ttl
+  max_ttl     = var.max_ttl
 
   parameters_in_cache_key_and_forwarded_to_origin {
     enable_accept_encoding_brotli = var.compress
@@ -218,7 +218,7 @@ resource "aws_cloudfront_cache_policy" "cache" {
     headers_config {
       header_behavior = length(null == var.forwarded_headers ? [] : var.forwarded_headers) > 0 ? "whitelist" : "none"
       dynamic "headers" {
-        for_each = length(null == var.forwarded_headers ? [] : var.forwarded_headers) > 0 ? {x: true} : {}
+        for_each = length(null == var.forwarded_headers ? [] : var.forwarded_headers) > 0 ? { x : true } : {}
         content {
           items = null == var.forwarded_headers ? [] : var.forwarded_headers
         }
@@ -231,7 +231,7 @@ resource "aws_cloudfront_cache_policy" "cache" {
 }
 
 resource "aws_cloudfront_response_headers_policy" "custom_cors_with_preflight_and_securityheaders" {
-  name    = "${var.env}-Custom-CORS-with-preflight-and-SecurityHeadersPolicy"
+  name = "${var.env}-Custom-CORS-with-preflight-and-SecurityHeadersPolicy"
 
   cors_config {
     access_control_allow_credentials = false
@@ -258,15 +258,15 @@ resource "aws_cloudfront_response_headers_policy" "custom_cors_with_preflight_an
   security_headers_config {
     referrer_policy {
       referrer_policy = "strict-origin-when-cross-origin"
-      override = false
+      override        = false
     }
     strict_transport_security {
       access_control_max_age_sec = 31536000
-      override = false
+      override                   = false
     }
     xss_protection {
       mode_block = true
-      override = false
+      override   = false
       protection = true
     }
   }

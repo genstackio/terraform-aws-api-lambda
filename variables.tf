@@ -47,8 +47,8 @@ variable "cached_methods" {
 }
 variable "edge_lambdas" {
   type = list(object({
-    event_type = string
-    lambda_arn = string
+    event_type   = string
+    lambda_arn   = string
     include_body = bool
   }))
   default = []
@@ -59,22 +59,22 @@ variable "edge_lambdas_variables" {
 }
 variable "static_assets_edge_lambdas" {
   type = list(object({
-    event_type = string
-    lambda_arn = string
+    event_type   = string
+    lambda_arn   = string
     include_body = bool
   }))
   default = []
 }
 variable "functions" {
   type = list(object({
-    event_type = string
+    event_type   = string
     function_arn = string
   }))
   default = []
 }
 variable "static_assets_functions" {
   type = list(object({
-    event_type = string
+    event_type   = string
     function_arn = string
   }))
   default = []

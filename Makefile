@@ -1,7 +1,7 @@
 all: install
 
 format:
-	@terraform fmt
+	@terraform fmt -recursive
 
 install:
 	@terraform get
