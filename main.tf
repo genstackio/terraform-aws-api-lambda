@@ -62,7 +62,7 @@ resource "aws_cloudfront_distribution" "cdn" {
     viewer_protocol_policy     = "redirect-to-https"
     cache_policy_id            = aws_cloudfront_cache_policy.cache.id
     origin_request_policy_id   = data.aws_cloudfront_origin_request_policy.managed_cors_custom_origin.id
-    response_headers_policy_id = aws_cloudfront_response_headers_policy.custom_cors_with_preflight_and_securityheaders.id
+    response_headers_policy_id = (null == var.response_headers_policy) ? aws_cloudfront_response_headers_policy.custom_cors_with_preflight_and_securityheaders[0].id : var.response_headers_policy
     compress                   = var.compress
 
     dynamic "lambda_function_association" {
@@ -93,7 +93,7 @@ resource "aws_cloudfront_distribution" "cdn" {
       viewer_protocol_policy     = "redirect-to-https"
       cache_policy_id            = data.aws_cloudfront_cache_policy.managed_caching_optimized.id
       origin_request_policy_id   = data.aws_cloudfront_origin_request_policy.managed_cors_s3_origin.id
-      response_headers_policy_id = aws_cloudfront_response_headers_policy.custom_cors_with_preflight_and_securityheaders.id
+      response_headers_policy_id = (null == var.response_headers_policy) ? aws_cloudfront_response_headers_policy.custom_cors_with_preflight_and_securityheaders[0].id : var.response_headers_policy
       compress                   = true
       dynamic "lambda_function_association" {
         for_each = { for i, l in var.static_assets_edge_lambdas : "static-assets-lambda-${i}" => l }
@@ -231,6 +231,7 @@ resource "aws_cloudfront_cache_policy" "cache" {
 }
 
 resource "aws_cloudfront_response_headers_policy" "custom_cors_with_preflight_and_securityheaders" {
+  count = null != var.response_headers_policy ? 0 : 1
   name = "${var.env}-${var.name}-Custom-CORS-with-preflight-and-SecurityHeadersPolicy"
 
   cors_config {
