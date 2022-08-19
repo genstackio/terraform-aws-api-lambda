@@ -231,7 +231,7 @@ resource "aws_cloudfront_cache_policy" "cache" {
 }
 
 resource "aws_cloudfront_response_headers_policy" "custom_cors_with_preflight_and_securityheaders" {
-  name = "${var.env}-Custom-CORS-with-preflight-and-SecurityHeadersPolicy"
+  name = "${var.env}-${var.name}-Custom-CORS-with-preflight-and-SecurityHeadersPolicy"
 
   cors_config {
     access_control_allow_credentials = false
