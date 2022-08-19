@@ -60,7 +60,7 @@ resource "aws_cloudfront_distribution" "cdn" {
     cached_methods             = var.cached_methods
     target_origin_id           = (null == var.api_name) ? "${var.env}-api-${var.name}" : var.api_name
     viewer_protocol_policy     = "redirect-to-https"
-    cache_policy_id            = aws_cloudfront_cache_policy.cache.id
+    cache_policy_id            = (null == var.cache_policy) ? aws_cloudfront_cache_policy.cache[0].id : var.cache_policy
     origin_request_policy_id   = data.aws_cloudfront_origin_request_policy.managed_cors_custom_origin.id
     response_headers_policy_id = (null == var.response_headers_policy) ? aws_cloudfront_response_headers_policy.custom_cors_with_preflight_and_securityheaders[0].id : var.response_headers_policy
     compress                   = var.compress
@@ -202,6 +202,7 @@ resource "aws_s3_bucket_policy" "static_assets" {
 
 
 resource "aws_cloudfront_cache_policy" "cache" {
+  count = (null == var.cache_policy) ? 1 : 0
   name = "${var.env}-${var.name}-cache-policy"
 
   min_ttl     = var.min_ttl
@@ -231,7 +232,7 @@ resource "aws_cloudfront_cache_policy" "cache" {
 }
 
 resource "aws_cloudfront_response_headers_policy" "custom_cors_with_preflight_and_securityheaders" {
-  count = null != var.response_headers_policy ? 0 : 1
+  count = (null == var.response_headers_policy) ? 1 : 0
   name = "${var.env}-${var.name}-Custom-CORS-with-preflight-and-SecurityHeadersPolicy"
 
   cors_config {
