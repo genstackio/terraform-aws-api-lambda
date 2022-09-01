@@ -61,7 +61,7 @@ resource "aws_cloudfront_distribution" "cdn" {
     target_origin_id           = (null == var.api_name) ? "${var.env}-api-${var.name}" : var.api_name
     viewer_protocol_policy     = "redirect-to-https"
     cache_policy_id            = (null == var.cache_policy) ? aws_cloudfront_cache_policy.cache[0].id : var.cache_policy
-    origin_request_policy_id   = (null == var.origin_request_policy) ? data.aws_cloudfront_origin_request_policy.managed_all_viewer.id : var.origin_request_policy
+    origin_request_policy_id   = (null == var.origin_request_policy) ? null : var.origin_request_policy
     response_headers_policy_id = (null == var.response_headers_policy) ? aws_cloudfront_response_headers_policy.custom_cors_with_preflight_and_securityheaders[0].id : var.response_headers_policy
     compress                   = var.compress
 
