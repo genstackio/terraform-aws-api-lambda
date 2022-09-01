@@ -5,6 +5,9 @@ data "aws_cloudfront_origin_request_policy" "managed_cors_s3_origin" {
 data "aws_cloudfront_origin_request_policy" "managed_cors_custom_origin" {
   name = "Managed-CORS-CustomOrigin"
 }
+data "aws_cloudfront_origin_request_policy" "managed_all_viewer" {
+  name = "Managed-AllViewer"
+}
 
 # Managed cache policy
 data "aws_cloudfront_cache_policy" "managed_caching_optimized" {
