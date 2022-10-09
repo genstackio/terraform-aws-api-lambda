@@ -247,7 +247,7 @@ resource "aws_s3_bucket_policy" "static_assets" {
 resource "aws_s3_bucket_policy" "unmanaged_static_assets" {
   for_each = { for s in toset(var.unmanaged_static_assets) : s.id => s if null == s.bucket_id }
   bucket   = data.aws_s3_bucket.unmanaged_static_assets[each.key].id
-  policy   = data.aws_iam_policy_document.s3_website_policy[each.key].json
+  policy   = data.aws_iam_policy_document.s3_website_policy_unmanaged[each.key].json
 }
 
 

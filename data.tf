@@ -33,3 +33,22 @@ data "aws_iam_policy_document" "s3_website_policy" {
     }
   }
 }
+data "aws_iam_policy_document" "s3_website_policy_unmanaged" {
+  for_each = { for s in toset(var.unmanaged_static_assets) : s.id => s if null == s.bucket_id }
+  statement {
+    actions   = ["s3:GetObject"]
+    resources = ["${data.aws_s3_bucket.unmanaged_static_assets[each.key].arn}/*"]
+    principals {
+      type        = "AWS"
+      identifiers = [aws_cloudfront_origin_access_identity.oai[0].iam_arn]
+    }
+  }
+  statement {
+    actions   = ["s3:ListBucket"]
+    resources = [data.aws_s3_bucket.unmanaged_static_assets[each.key].arn]
+    principals {
+      type        = "AWS"
+      identifiers = [aws_cloudfront_origin_access_identity.oai[0].iam_arn]
+    }
+  }
+}
