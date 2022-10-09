@@ -16,3 +16,6 @@ output "cloudfront_id" {
 output "cloudfront_arn" {
   value = aws_cloudfront_distribution.cdn.arn
 }
+output "cloudfront_origin_access_identity_iam_arn" {
+  value = length(aws_cloudfront_origin_access_identity) > 0 ? aws_cloudfront_origin_access_identity[0].iam_arn : null
+}
