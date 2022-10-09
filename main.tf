@@ -6,7 +6,7 @@ module "api" {
 }
 
 resource "aws_cloudfront_origin_access_identity" "oai" {
-  count = length(var.static_assets) > 0 ? 1 : 0
+  count = ((length(var.static_assets) > 0) || (length(var.unmanaged_static_assets) > 0)) ? 1 : 0
 }
 
 
@@ -43,6 +43,16 @@ resource "aws_cloudfront_distribution" "cdn" {
     for_each = { for s in toset(var.static_assets) : s.id => s }
     content {
       domain_name = aws_s3_bucket.static_assets[(null != origin.value.bucket_id) ? origin.value.bucket_id : origin.value.id].bucket_regional_domain_name
+      origin_id   = origin.value.id
+      s3_origin_config {
+        origin_access_identity = aws_cloudfront_origin_access_identity.oai[0].cloudfront_access_identity_path
+      }
+    }
+  }
+  dynamic "origin" {
+    for_each = { for s in toset(var.unmanaged_static_assets) : s.id => s }
+    content {
+      domain_name = data.aws_s3_bucket.unmanaged_static_assets[(null != origin.value.bucket_id) ? origin.value.bucket_id : origin.value.id].bucket_regional_domain_name
       origin_id   = origin.value.id
       s3_origin_config {
         origin_access_identity = aws_cloudfront_origin_access_identity.oai[0].cloudfront_access_identity_path
@@ -113,6 +123,36 @@ resource "aws_cloudfront_distribution" "cdn" {
       }
     }
   }
+  dynamic "ordered_cache_behavior" {
+    for_each = { for s in toset(var.unmanaged_static_assets) : s.id => s }
+    content {
+      path_pattern               = ordered_cache_behavior.value.path_pattern
+      allowed_methods            = ["GET", "HEAD", "OPTIONS"]
+      cached_methods             = ["GET", "HEAD"]
+      target_origin_id           = (null != ordered_cache_behavior.value.bucket_id) ? ordered_cache_behavior.value.bucket_id : ordered_cache_behavior.value.id
+      viewer_protocol_policy     = "redirect-to-https"
+      cache_policy_id            = data.aws_cloudfront_cache_policy.managed_caching_optimized.id
+      origin_request_policy_id   = data.aws_cloudfront_origin_request_policy.managed_cors_s3_origin.id
+      response_headers_policy_id = (null == var.response_headers_policy) ? aws_cloudfront_response_headers_policy.custom_cors_with_preflight_and_securityheaders[0].id : var.response_headers_policy
+      compress                   = true
+      dynamic "lambda_function_association" {
+        for_each = { for i, l in var.unmanaged_static_assets_edge_lambdas : "unmanaged-static-assets-lambda-${i}" => l }
+        content {
+          event_type   = lambda_function_association.value.event_type
+          lambda_arn   = lambda_function_association.value.lambda_arn
+          include_body = lambda_function_association.value.include_body
+        }
+      }
+
+      dynamic "function_association" {
+        for_each = { for i, l in var.unmanaged_static_assets_functions : "unmanaged-static-assets-function-${i}" => l }
+        content {
+          event_type   = function_association.value.event_type
+          function_arn = function_association.value.function_arn
+        }
+      }
+    }
+  }
 
   price_class = var.price_class
 
@@ -174,6 +214,11 @@ resource "aws_s3_bucket" "static_assets" {
   bucket   = lookup(each.value, "bucket_name")
 }
 
+data "aws_s3_bucket" "unmanaged_static_assets" {
+  for_each = { for s in toset(var.unmanaged_static_assets) : s.id => s if null == s.bucket_id }
+  bucket   = lookup(each.value, "bucket_name")
+}
+
 resource "aws_s3_bucket_acl" "static_assets" {
   for_each = { for s in toset(var.static_assets) : s.id => s if null == s.bucket_id }
   bucket   = aws_s3_bucket.static_assets[each.key].id
@@ -199,6 +244,11 @@ resource "aws_s3_bucket_policy" "static_assets" {
   policy   = data.aws_iam_policy_document.s3_website_policy[each.key].json
 }
 
+resource "aws_s3_bucket_policy" "unmanaged_static_assets" {
+  for_each = { for s in toset(var.unmanaged_static_assets) : s.id => s if null == s.bucket_id }
+  bucket   = data.aws_s3_bucket.unmanaged_static_assets[each.key].id
+  policy   = data.aws_iam_policy_document.s3_website_policy[each.key].json
+}
 
 
 resource "aws_cloudfront_cache_policy" "cache" {
