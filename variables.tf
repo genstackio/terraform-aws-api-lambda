@@ -80,6 +80,10 @@ variable "functions" {
   }))
   default = []
 }
+variable "no_static_assets_bucket_policy" {
+  type    = bool
+  default = false
+}
 variable "static_assets_functions" {
   type = list(object({
     event_type   = string

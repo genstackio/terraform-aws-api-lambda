@@ -15,7 +15,7 @@ data "aws_cloudfront_cache_policy" "managed_caching_optimized" {
 }
 
 data "aws_iam_policy_document" "s3_website_policy" {
-  for_each = { for s in toset(var.static_assets) : s.id => s if null == s.bucket_id }
+  for_each = (true == var.no_static_assets_bucket_policy) ? {} : { for s in toset(var.static_assets) : s.id => s if null == s.bucket_id }
   statement {
     actions   = ["s3:GetObject"]
     resources = ["${aws_s3_bucket.static_assets[each.key].arn}/*"]
@@ -34,7 +34,7 @@ data "aws_iam_policy_document" "s3_website_policy" {
   }
 }
 data "aws_iam_policy_document" "s3_website_policy_unmanaged" {
-  for_each = { for s in toset(var.unmanaged_static_assets) : s.id => s if null == s.bucket_id }
+  for_each = (true == var.no_static_assets_bucket_policy) ? {} : { for s in toset(var.unmanaged_static_assets) : s.id => s if null == s.bucket_id }
   statement {
     actions   = ["s3:GetObject"]
     resources = ["${data.aws_s3_bucket.unmanaged_static_assets[each.key].arn}/*"]

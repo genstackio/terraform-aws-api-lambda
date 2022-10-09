@@ -239,13 +239,13 @@ resource "aws_s3_bucket_cors_configuration" "static_assets" {
 }
 
 resource "aws_s3_bucket_policy" "static_assets" {
-  for_each = { for s in toset(var.static_assets) : s.id => s if null == s.bucket_id }
+  for_each = (true == var.no_static_assets_bucket_policy) ? {} : { for s in toset(var.static_assets) : s.id => s if null == s.bucket_id }
   bucket   = aws_s3_bucket.static_assets[each.key].id
   policy   = data.aws_iam_policy_document.s3_website_policy[each.key].json
 }
 
 resource "aws_s3_bucket_policy" "unmanaged_static_assets" {
-  for_each = { for s in toset(var.unmanaged_static_assets) : s.id => s if null == s.bucket_id }
+  for_each = (true == var.no_static_assets_bucket_policy) ? {} : { for s in toset(var.unmanaged_static_assets) : s.id => s if null == s.bucket_id }
   bucket   = data.aws_s3_bucket.unmanaged_static_assets[each.key].id
   policy   = data.aws_iam_policy_document.s3_website_policy_unmanaged[each.key].json
 }
