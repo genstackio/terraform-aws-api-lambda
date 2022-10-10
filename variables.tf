@@ -148,3 +148,7 @@ variable "cache_policy" {
   type    = string
   default = null
 }
+variable "dns_alts" {
+  type    = list(string)
+  default = null
+}
