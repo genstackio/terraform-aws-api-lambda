@@ -207,7 +207,10 @@ resource "aws_route53_record" "cert_validation" {
 resource "aws_acm_certificate_validation" "cert" {
   provider                = aws.acm
   certificate_arn         = aws_acm_certificate.cert.arn
-  validation_record_fqdns = [aws_route53_record.cert_validation.fqdn]
+  validation_record_fqdns = concat(
+    [aws_route53_record.cert_validation.fqdn],
+    [for i,o in aws_acm_certificate.cert.domain_validation_options: "${lookup(o, "resource_record_name")}.${lookup(o, "domain_name")}." if (i > 0 && (lookup(o, "domain_name") != element(tolist(aws_acm_certificate.cert.domain_validation_options), 0).domain_name))]
+  )
 }
 
 resource "aws_s3_bucket" "static_assets" {
