@@ -63,7 +63,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   is_ipv6_enabled = true
   comment         = "${var.env} api ${var.name} distribution"
 
-  aliases = [var.dns]
+  aliases = concat([var.dns], null != var.dns_alts ? var.dns_alts : [])
 
   default_cache_behavior {
     allowed_methods            = var.allowed_methods
