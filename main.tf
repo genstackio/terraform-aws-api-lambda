@@ -59,6 +59,16 @@ resource "aws_cloudfront_distribution" "cdn" {
       }
     }
   }
+  dynamic "origin" {
+    for_each = null != var.errors_bucket ? { errors = var.errors_bucket } : {}
+    content {
+      domain_name = data.aws_s3_bucket.errors[origin.value].bucket_regional_domain_name
+      origin_id   = origin.value
+      s3_origin_config {
+        origin_access_identity = aws_cloudfront_origin_access_identity.oai[0].cloudfront_access_identity_path
+      }
+    }
+  }
   enabled         = true
   is_ipv6_enabled = true
   comment         = "${var.env} api ${var.name} distribution"
@@ -163,6 +173,20 @@ resource "aws_cloudfront_distribution" "cdn" {
       }
     }
   }
+  dynamic "ordered_cache_behavior" {
+    for_each = null != var.errors_bucket ? { errors = var.errors_bucket } : {}
+    content {
+      path_pattern               = "/errors/*"
+      allowed_methods            = ["GET", "HEAD", "OPTIONS"]
+      cached_methods             = ["GET", "HEAD"]
+      target_origin_id           = ordered_cache_behavior.value
+      viewer_protocol_policy     = "redirect-to-https"
+      cache_policy_id            = data.aws_cloudfront_cache_policy.managed_caching_optimized.id
+      origin_request_policy_id   = data.aws_cloudfront_origin_request_policy.managed_cors_s3_origin.id
+      response_headers_policy_id = (null == var.response_headers_policy) ? aws_cloudfront_response_headers_policy.custom_cors_with_preflight_and_securityheaders[0].id : var.response_headers_policy
+      compress                   = true
+    }
+  }
 
   price_class = var.price_class
 
@@ -231,6 +255,11 @@ resource "aws_s3_bucket" "static_assets" {
 data "aws_s3_bucket" "unmanaged_static_assets" {
   for_each = { for s in toset(var.unmanaged_static_assets) : s.id => s if null == s.bucket_id }
   bucket   = lookup(each.value, "bucket_name")
+}
+
+data "aws_s3_bucket" "errors" {
+  for_each = null != var.errors_bucket ? { errors = var.errors_bucket } : {}
+  bucket   = each.value
 }
 
 resource "aws_s3_bucket_acl" "static_assets" {

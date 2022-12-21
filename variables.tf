@@ -161,3 +161,7 @@ variable "error_responses" {
   }))
   default = []
 }
+variable "errors_bucket" {
+  type = string
+  default = null
+}
