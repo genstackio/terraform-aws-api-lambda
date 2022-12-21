@@ -157,7 +157,7 @@ variable "error_responses" {
     code = number
     ttl = optional(number)
     response_code = optional(number)
-    response_page_path = optional(number)
+    response_page_path = optional(string)
   }))
   default = []
 }
