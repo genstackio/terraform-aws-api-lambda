@@ -65,6 +65,16 @@ resource "aws_cloudfront_distribution" "cdn" {
 
   aliases = concat([var.dns], null != var.dns_alts ? var.dns_alts : [])
 
+  dynamic "custom_error_response" {
+    for_each = { for e in toset(var.error_responses) : "${e.code}" => e }
+    content {
+      error_code = custom_error_response.value.code
+      error_caching_min_ttl = lookup(custom_error_response.value, "ttl", null)
+      response_code = lookup(custom_error_response.value, "response_code", custom_error_response.value.code)
+      response_page_path = lookup(custom_error_response.value, "response_page_path", "/custom_${custom_error_response.value.code}.json")
+    }
+  }
+
   default_cache_behavior {
     allowed_methods            = var.allowed_methods
     cached_methods             = var.cached_methods
