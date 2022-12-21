@@ -159,4 +159,5 @@ variable "error_responses" {
     response_code = optional(number)
     response_page_path = optional(number)
   }))
+  default = []
 }
