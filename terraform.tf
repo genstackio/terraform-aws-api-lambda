@@ -6,4 +6,5 @@ terraform {
       configuration_aliases = [aws.acm]
     }
   }
+  experiments = [module_variable_optional_attrs]
 }
