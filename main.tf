@@ -6,7 +6,7 @@ module "api" {
 }
 
 resource "aws_cloudfront_origin_access_identity" "oai" {
-  count = ((length(var.static_assets) > 0) || (length(var.unmanaged_static_assets) > 0)) ? 1 : 0
+  count = ((length(var.static_assets) > 0) || (length(var.unmanaged_static_assets) > 0) || (null != var.errors_bucket)) ? 1 : 0
 }
 
 
@@ -62,7 +62,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   dynamic "origin" {
     for_each = null != var.errors_bucket ? { errors = var.errors_bucket } : {}
     content {
-      domain_name = data.aws_s3_bucket.errors[origin.value].bucket_regional_domain_name
+      domain_name = data.aws_s3_bucket.errors[origin.key].bucket_regional_domain_name
       origin_id   = origin.value
       s3_origin_config {
         origin_access_identity = aws_cloudfront_origin_access_identity.oai[0].cloudfront_access_identity_path
@@ -179,7 +179,7 @@ resource "aws_cloudfront_distribution" "cdn" {
       path_pattern               = "/errors/*"
       allowed_methods            = ["GET", "HEAD", "OPTIONS"]
       cached_methods             = ["GET", "HEAD"]
-      target_origin_id           = ordered_cache_behavior.value
+      target_origin_id           = ordered_cache_behavior.key
       viewer_protocol_policy     = "redirect-to-https"
       cache_policy_id            = data.aws_cloudfront_cache_policy.managed_caching_optimized.id
       origin_request_policy_id   = data.aws_cloudfront_origin_request_policy.managed_cors_s3_origin.id
