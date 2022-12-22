@@ -63,7 +63,7 @@ resource "aws_cloudfront_distribution" "cdn" {
     for_each = null != var.errors_bucket ? { errors = var.errors_bucket } : {}
     content {
       domain_name = data.aws_s3_bucket.errors[origin.key].bucket_regional_domain_name
-      origin_id   = origin.value
+      origin_id   = origin.key
       s3_origin_config {
         origin_access_identity = aws_cloudfront_origin_access_identity.oai[0].cloudfront_access_identity_path
       }
