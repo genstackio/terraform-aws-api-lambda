@@ -262,10 +262,21 @@ data "aws_s3_bucket" "errors" {
   bucket   = each.value
 }
 
+resource "aws_s3_bucket_ownership_controls" "static_assets" {
+  for_each = { for s in toset(var.static_assets) : s.id => s if null == s.bucket_id }
+  bucket   = aws_s3_bucket.static_assets[each.key].id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
 resource "aws_s3_bucket_acl" "static_assets" {
   for_each = { for s in toset(var.static_assets) : s.id => s if null == s.bucket_id }
   bucket   = aws_s3_bucket.static_assets[each.key].id
   acl      = "private"
+  depends_on = [
+    aws_s3_bucket_ownership_controls.static_assets[each.key],
+  ]
 }
 
 resource "aws_s3_bucket_cors_configuration" "static_assets" {
