@@ -11,6 +11,10 @@ variable "api_name" {
 variable "lambda_arn" {
   type = string
 }
+variable "lambda_invoke_arn" {
+  type    = string
+  default = null
+}
 variable "dns" {
   type = string
 }

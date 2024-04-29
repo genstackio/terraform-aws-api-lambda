@@ -1,8 +1,9 @@
 module "api" {
-  source     = "genstackio/apigateway2-api/aws"
-  version    = "0.3.0"
-  name       = (null == var.api_name) ? "${var.env}-api-${var.name}" : var.api_name
-  lambda_arn = var.lambda_arn
+  source            = "genstackio/apigateway2-api/aws"
+  version           = "0.4.0"
+  name              = (null == var.api_name) ? "${var.env}-api-${var.name}" : var.api_name
+  lambda_arn        = var.lambda_arn
+  lambda_invoke_arn = var.lambda_invoke_arn
 }
 
 resource "aws_cloudfront_origin_access_identity" "oai" {
