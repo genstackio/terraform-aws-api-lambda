@@ -8,6 +8,10 @@ variable "api_name" {
   type    = string
   default = null
 }
+variable "protocol" {
+  type    = string
+  default = "HTTP"
+}
 variable "lambda_arn" {
   type = string
 }

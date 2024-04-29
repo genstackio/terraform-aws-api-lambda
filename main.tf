@@ -4,6 +4,7 @@ module "api" {
   name              = (null == var.api_name) ? "${var.env}-api-${var.name}" : var.api_name
   lambda_arn        = var.lambda_arn
   lambda_invoke_arn = var.lambda_invoke_arn
+  protocol          = var.protocol
 }
 
 resource "aws_cloudfront_origin_access_identity" "oai" {
