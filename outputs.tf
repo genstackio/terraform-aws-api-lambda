@@ -4,6 +4,12 @@ output "endpoint" {
 output "internal_endpoint" {
   value = module.api.endpoint
 }
+output "internal_execution_arn" {
+  value = module.api.execution_arn
+}
+output "internal_arn" {
+  value = module.api.arn
+}
 output "static_assets_buckets" {
   value = { for i, b in aws_s3_bucket.static_assets : i => {
     name = b.bucket
