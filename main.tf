@@ -11,6 +11,15 @@ resource "aws_cloudfront_origin_access_identity" "oai" {
   count = ((length(var.static_assets) > 0) || (length(var.unmanaged_static_assets) > 0) || (null != var.errors_bucket)) ? 1 : 0
 }
 
+resource "aws_cloudfront_function" "function" {
+  for_each = {for k, v in local.functions: k => v if null != v.code}
+  name    = lookup(each.value, "full_name", "${var.name}-${each.key}")
+  runtime = lookup(each.value, "runtime", "cloudfront-js-2.0")
+  comment = "${each.key} function"
+  key_value_store_associations = lookup(each.value, "kv_stores", null)
+  publish = true
+  code    = lookup(each.value, "code", null)
+}
 
 resource "aws_cloudfront_distribution" "cdn" {
   origin {
@@ -107,10 +116,10 @@ resource "aws_cloudfront_distribution" "cdn" {
     }
 
     dynamic "function_association" {
-      for_each = { for i, l in var.functions : "function-${i}" => l }
+      for_each = local.functions
       content {
-        event_type   = function_association.value.event_type
-        function_arn = function_association.value.function_arn
+        event_type   = lookup(function_association.value, "event_type", "viewer-request")
+        function_arn = null != function_association.value.arn ? function_association.value.arn : (function_association.value.function_arn ? function_association.value.function_arn : aws_cloudfront_function.function[function_association.key].arn)
       }
     }
   }

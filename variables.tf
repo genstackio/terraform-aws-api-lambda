@@ -83,8 +83,14 @@ variable "unmanaged_static_assets_edge_lambdas" {
 }
 variable "functions" {
   type = list(object({
-    event_type   = string
-    function_arn = string
+    event_type   = optional(string)
+    function_arn = optional(string) // deprecated, arn || function_arn
+    arn          = optional(string)
+    code         = optional(string) // function_arn || (code + name)
+    name         = optional(string)
+    full_name    = optional(string)
+    runtime      = optional(string)
+    kv_stores    = optional(list(string))
   }))
   default = []
 }
