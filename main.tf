@@ -119,7 +119,7 @@ resource "aws_cloudfront_distribution" "cdn" {
       for_each = local.functions
       content {
         event_type   = lookup(function_association.value, "event_type", "viewer-request")
-        function_arn = null != function_association.value.arn ? function_association.value.arn : (function_association.value.function_arn ? function_association.value.function_arn : aws_cloudfront_function.function[function_association.key].arn)
+        function_arn = (null != function_association.value.arn) ? function_association.value.arn : ((null != function_association.value.function_arn) ? function_association.value.function_arn : aws_cloudfront_function.function[function_association.key].arn)
       }
     }
   }
